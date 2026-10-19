@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAMU Citizens for Good (C4G) Operational Framework & Canvas Tagging Engine</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tamu: {
+                            maroon: '#500000',
+                            dark: '#3C0000',
+                            light: '#6d0000',
+                            gold: '#d4af37',
+                            amber: '#f59e0b',
+                            slate: '#0f172a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .maroon-gradient {
+            background: linear-gradient(135deg, #500000 0%, #3C0000 100%);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 18px rgba(212, 175, 55, 0.45);
+        }
+
+        /* Pulse highlight animation for filtered items */
+        @keyframes highlightPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .highlight-cell {
+            animation: highlightPulse 0.4s ease-in-out;
+        }
+
+        /* Toast Popup Animation */
+        .toast-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .toast-show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 bg-slate-100 antialiased">
+
+    <!-- TOP HEADER -->
+    <header class="maroon-gradient text-white border-b-4 border-tamu-gold shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white text-tamu-maroon font-black text-2xl tracking-tighter px-3 py-1.5 rounded-lg shadow border border-amber-200 shrink-0">
+                        ATM
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-xl sm:text-2xl font-black tracking-tight">Citizenship & Service (C4G)</h1>
+                            <span class="text-[10px] bg-tamu-gold text-tamu-dark font-extrabold px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                Interactive Operational Matrix
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-200">
+                            Texas A&M University • Progressive Disclosure & Canvas Syllabus Integration
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Role View Selector & Stats -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <div class="bg-black/30 backdrop-blur-sm border border-amber-500/30 rounded-lg p-1.5 flex items-center gap-2">
+                        <span class="text-amber-200 font-bold px-1.5">View Mode:</span>
+                        <select id="roleViewSelect" onchange="handleRoleViewChange()" class="bg-tamu-dark text-white text-xs font-semibold rounded px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-tamu-gold cursor-pointer border border-tamu-gold/40">
+                            <option value="FACULTY">🧑‍🏫 Faculty / Syllabus Tagging (Low-Friction)</option>
+                            <option value="ACCREDITATION">🛡️ ABET & CAS Assessment Lead (Compliance)</option>
+                            <option value="STUDENT">🎓 Student / Learner Reflection View</option>
+                            <option value="ALL">🔬 Full Unfiltered Matrix (63 Cells)</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS & SEARCH BAR -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[68px] z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2">
+                
+                <!-- View Tabs -->
+                <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto pb-1 md:pb-0" id="mainTabs">
+                    <button onclick="switchTab('floor')" id="tab-floor" class="tab-btn active inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all text-tamu-maroon bg-slate-100 border-b-2 border-tamu-maroon shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Floor UI (12 Macro-Cells)
+                    </button>
+                    <button onclick="switchTab('bedrock')" id="tab-bedrock" class="tab-btn inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Bedrock Layer (21 Sub-Themes)
+                    </button>
+                    <button onclick="switchTab('crosswalk')" id="tab-crosswalk" class="tab-btn inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"/></svg>
+                        Accreditation Filter (ABET & CAS)
+                    </button>
+                    <button onclick="switchTab('canvas')" id="tab-canvas" class="tab-btn inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-tamu-maroon hover:bg-slate-50">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        Canvas Tag Generator Wizard
+                    </button>
+                </nav>
+
+                <!-- Search Input -->
+                <div class="relative min-w-[260px] max-w-xs">
+                    <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="globalSearch" oninput="handleSearch()" placeholder="Search ethics, ABET, leadership..." 
+                           class="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tamu-maroon focus:bg-white transition-all">
+                    <button onclick="clearSearch()" id="btnClearSearch" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- BANNER NOTICE -->
+        <div id="roleBanner" class="mb-6 bg-amber-50 border-l-4 border-tamu-gold p-4 rounded-r-lg shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+                <span class="text-xl shrink-0">💡</span>
+                <div>
+                    <h3 id="roleBannerTitle" class="text-sm font-bold text-amber-900">Faculty Floor View (Low Friction)</h3>
+                    <p id="roleBannerDesc" class="text-xs text-amber-800">
+                        You are viewing the simplified 12-cell macro matrix. Click any cell to inspect inherited sub-competencies, ABET outcomes, and CAS domains, or send directly to the Canvas Tag Generator.
+                    </p>
+                </div>
+            </div>
+            <button onclick="switchTab('canvas')" class="shrink-0 bg-tamu-maroon text-white text-xs font-bold px-3.5 py-2 rounded-lg hover:bg-tamu-dark transition-colors shadow flex items-center gap-1.5">
+                <span>⚡</span> Tag Course in Canvas
+            </button>
+        </div>
+
+        <!-- VIEW 1: FLOOR MODEL (12 MACRO-CELLS) -->
+        <section id="view-floor" class="space-y-6">
+            <div class="overflow-x-auto pb-4">
+                <div class="min-w-[850px]">
+                    <!-- Table Header Row -->
+                    <div class="grid grid-cols-4 gap-4 mb-3">
+                        <div class="col-span-1 bg-tamu-dark text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-between shadow-sm">
+                            <span>Core Pillars / Progression</span>
+                            <span class="text-[10px] text-amber-300">4 Pillars</span>
+                        </div>
+                        <div class="bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center shadow-sm border-t-2 border-amber-400">
+                            <span class="text-amber-300">Tier 1:</span> Emerging Awareness
+                        </div>
+                        <div class="bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center shadow-sm border-t-2 border-amber-400">
+                            <span class="text-amber-300">Tier 2:</span> Developing Competence
+                        </div>
+                        <div class="bg-slate-800 text-white p-3 rounded-lg font-bold text-xs uppercase tracking-wider text-center shadow-sm border-t-2 border-amber-400">
+                            <span class="text-amber-300">Tier 3:</span> Mastery & Leadership
+                        </div>
+                    </div>
+
+                    <!-- MATRIX ROWS CONTAINER (Populated dynamically) -->
+                    <div id="floorMatrixGrid" class="grid grid-cols-4 gap-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: BEDROCK LAYER (21 SUB-THEMES / 63 DEEP DIVE CELLS) -->
+        <section id="view-bedrock" class="hidden space-y-6">
+            <div class="bg-slate-900 text-white p-4 rounded-xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800">
+                <div>
+                    <h3 class="text-base font-bold text-amber-300 flex items-center gap-2">
+                        <span>🔬</span> Bedrock Taxonomy Reference Engine
+                    </h3>
+                    <p class="text-xs text-slate-300 mt-1">
+                        Full 21 sub-competencies mapped across 3 progression tiers (63 cells total) with explicit ABET Outcomes (SO 1-7) and CAS Domains (1-6).
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-300 font-medium">Filter Pillar:</label>
+                    <select id="bedrockPillarFilter" onchange="filterBedrockView()" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-tamu-gold cursor-pointer">
+                        <option value="ALL">All Core Pillars (21 Themes)</option>
+                        <option value="KNOWLEDGE">Knowledge Pillar (7 Themes)</option>
+                        <option value="CHARACTER">Character Pillar (3 Themes)</option>
+                        <option value="SKILLS">Skills Pillar (6 Themes)</option>
+                        <option value="SERVICE">Service Pillar (5 Themes)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- BEDROCK CARDS CONTAINER -->
+            <div id="bedrockCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- VIEW 3: ACCREDITATION FILTER & HEATMAP -->
+        <section id="view-crosswalk" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                <div class="border-b border-slate-200 pb-4">
+                    <h3 class="text-lg font-black text-tamu-maroon flex items-center gap-2">
+                        <span>🛡️</span> ABET & CAS Accreditation Compliance Filter
+                    </h3>
+                    <p class="text-xs text-slate-600 mt-1">
+                        Click any outcome below to instantly highlight where that standard is satisfied across the C4G matrix and dim irrelevant cells.
+                    </p>
+                </div>
+
+                <!-- FILTER SELECTOR BUTTON GROUPS -->
+                <div class="space-y-4">
+                    <!-- ABET Group -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black uppercase tracking-wider text-tamu-maroon flex items-center gap-1.5">
+                                <span>🎓</span> ABET Engineering Student Outcomes (SO 1 - SO 7):
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="abetFilterButtons"></div>
+                    </div>
+                    
+                    <!-- CAS Group -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                                <span>🏛️</span> CAS Co-Curricular Student Development Domains (1 - 6):
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="casFilterButtons"></div>
+                    </div>
+                </div>
+
+                <!-- HEATMAP SUMMARY REPORT HEADER -->
+                <div id="crosswalkSummary" class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-xs sm:text-sm font-medium text-slate-700">Select an accreditation outcome tag above to generate coverage report.</span>
+                    <button onclick="clearCrosswalkFilter()" class="text-xs text-tamu-maroon font-bold hover:underline hidden" id="btnClearCrosswalk">
+                        Reset Filter
+                    </button>
+                </div>
+
+                <!-- MATCHING RESULTS GRID -->
+                <div id="crosswalkGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: CANVAS TAG GENERATOR WIZARD -->
+        <section id="view-canvas" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- WIZARD INPUT FORM (LEFT) -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <div class="border-b border-slate-200 pb-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-bold text-tamu-maroon flex items-center gap-2">
+                                <span>📝</span> Syllabus & Canvas Tagging Wizard
+                            </h3>
+                            <span class="text-[10px] bg-tamu-gold text-tamu-dark font-extrabold px-2 py-0.5 rounded uppercase">2-Step Wizard</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">Tag a course syllabus or activity in seconds to auto-generate Canvas snippet code and compliance JSON.</p>
+                    </div>
+
+                    <form id="taggerForm" class="space-y-4" onsubmit="event.preventDefault(); generateCanvasPayload();">
+                        
+                        <!-- Course Code / Title -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Course Code or Activity Title</label>
+                            <input type="text" id="tagCourseTitle" value="ENGR 482: Ethics & Engineering" placeholder="e.g. ENGR 482 or Aggie Replant Director" required
+                                   oninput="generateCanvasPayload()"
+                                   class="w-full text-xs sm:text-sm p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none transition-all">
+                        </div>
+
+                        <!-- Pillar & Tier Selection -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Step 1: Core Pillar</label>
+                                <select id="tagPillarSelect" onchange="updateTagFormSubOptions()" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none bg-white font-medium">
+                                    <option value="KNOWLEDGE">Knowledge</option>
+                                    <option value="CHARACTER" selected>Character</option>
+                                    <option value="SKILLS">Skills</option>
+                                    <option value="SERVICE">Service</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Step 2: Intensity Tier</label>
+                                <select id="tagTierSelect" onchange="generateCanvasPayload()" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-tamu-maroon focus:outline-none bg-white font-medium">
+                                    <option value="TIER1">Tier 1: Awareness</option>
+                                    <option value="TIER2" selected>Tier 2: Competence</option>
+                                    <option value="TIER3">Tier 3: Leadership</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Progressive Drill-Down Checkboxes (Optional Step 3) -->
+                        <div class="border border-slate-200 rounded-lg p-3 bg-slate-50 space-y-2">
+                            <div class="flex items-center justify-between cursor-pointer" onclick="toggleElement('drilldownChecklist')">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span>⚙️</span> Step 3: Refine Sub-Themes (Optional)
+                                </span>
+                                <span class="text-[10px] text-tamu-maroon font-bold underline">Toggle Options</span>
+                            </div>
+                            <div id="drilldownChecklist" class="space-y-2 max-h-44 overflow-y-auto pt-2 border-t border-slate-200">
+                                <!-- JS Populates Sub-Competency Checkboxes -->
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="generateCanvasPayload()" class="w-full bg-tamu-maroon text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg hover:bg-tamu-dark transition-all shadow-md flex items-center justify-center gap-2">
+                            <span>⚡</span> Generate Canvas HTML & Compliance JSON
+                        </button>
+                    </form>
+                </div>
+
+                <!-- WIZARD OUTPUT PANELS (RIGHT) -->
+                <div class="lg:col-span-7 space-y-6">
+                    
+                    <!-- CANVAS SYLLABUS PREVIEW CARD -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span>🎨</span> Canvas Syllabus / Assignment Snippet
+                                </h4>
+                                <p class="text-[11px] text-slate-500">Visual snippet as displayed to students in Canvas LMS</p>
+                            </div>
+                            <button onclick="copyToClipboard('canvasSnippetCode', 'btnCopySnippet')" id="btnCopySnippet" class="text-xs bg-slate-100 hover:bg-tamu-maroon hover:text-white border border-slate-300 px-3 py-1.5 rounded-lg transition-all font-bold flex items-center gap-1.5 shadow-sm">
+                                <span>📋</span> Copy HTML Snippet
+                            </button>
+                        </div>
+
+                        <!-- VISUAL PREVIEW BOX -->
+                        <div class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                            <div class="bg-tamu-maroon text-white px-4 py-2.5 text-xs font-bold flex items-center justify-between">
+                                <span>Texas A&M C4G Course Framework</span>
+                                <span class="text-[10px] bg-amber-400 text-tamu-dark px-2 py-0.5 rounded font-black uppercase" id="previewBadgeTier">TIER 2</span>
+                            </div>
+                            <div class="p-4 space-y-3 bg-white" id="canvasVisualPreview">
+                                <!-- Populated dynamically by JS -->
+                            </div>
+                        </div>
+
+                        <!-- RAW HTML SNIPPET ACCORDION -->
+                        <details class="text-xs">
+                            <summary class="cursor-pointer font-bold text-slate-600 hover:text-tamu-maroon py-1">View Raw HTML Code for Canvas HTML Editor</summary>
+                            <pre id="canvasSnippetCode" class="mt-2 p-3 bg-slate-900 text-slate-200 rounded-lg text-[11px] font-mono overflow-x-auto whitespace-pre-wrap border border-slate-800"></pre>
+                        </details>
+                    </div>
+
+                    <!-- BACKEND COMPLIANCE JSON PAYLOAD CARD -->
+                    <div class="bg-slate-900 text-slate-100 p-6 rounded-xl shadow-md space-y-4 border border-slate-800">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <div>
+                                <h4 class="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                    <span>⚙️</span> Backend Accreditation JSON Payload
+                                </h4>
+                                <p class="text-[11px] text-slate-400">Auto-inherited ABET Outcomes and CAS Domains ready for SACSCOC & Provost Reporting</p>
+                            </div>
+                            <button onclick="copyToClipboard('jsonPayloadCode', 'btnCopyJson')" id="btnCopyJson" class="text-xs bg-slate-800 hover:bg-amber-400 hover:text-tamu-dark border border-slate-700 px-3 py-1.5 rounded-lg transition-all font-bold text-amber-300 flex items-center gap-1.5">
+                                <span>📋</span> Copy JSON Payload
+                            </button>
+                        </div>
+                        <pre id="jsonPayloadCode" class="p-3 bg-slate-950 text-emerald-400 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap border border-slate-800 max-h-56"></pre>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DRILL-DOWN INSPECTOR DRAWER MODAL -->
+    <div id="cellDrawerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex justify-end transition-opacity">
+        <div class="bg-white w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between overflow-hidden">
+            
+            <!-- Drawer Header -->
+            <div class="p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="drawerPillarBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-tamu-maroon text-white">PILLAR</span>
+                        <span id="drawerTierBadge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-tamu-gold text-tamu-dark">TIER</span>
+                    </div>
+                    <h3 id="drawerTitle" class="text-lg font-bold text-amber-200 mt-1">Cell Title</h3>
+                </div>
+                <button onclick="closeDrawer()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors text-lg font-bold">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Drawer Body -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                
+                <!-- Macro Summary -->
+                <div class="bg-amber-50 border-l-4 border-tamu-gold p-4 rounded-r-lg">
+                    <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">Macro Floor Descriptor</h4>
+                    <p id="drawerMacroDescriptor" class="text-sm font-semibold text-amber-950 leading-relaxed"></p>
+                </div>
+
+                <!-- Sub-Competencies Drilldown Accordion -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-800">
+                            Inherited Bedrock Sub-Competencies (<span id="drawerSubCount">0</span>)
+                        </h4>
+                        <span class="text-[11px] text-slate-500 font-medium">Mapped ABET & CAS Accreditation Codes</span>
+                    </div>
+                    <div id="drawerSubList" class="space-y-3"></div>
+                </div>
+
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <button onclick="closeDrawer()" class="px-4 py-2 border border-slate-300 text-xs font-bold text-slate-700 rounded-lg hover:bg-slate-200 transition-colors">
+                    Close Inspector
+                </button>
+                <button id="btnDrawerUseTag" onclick="useCellInCanvasTagger()" class="px-4 py-2 bg-tamu-maroon text-white text-xs font-bold rounded-lg hover:bg-tamu-dark transition-colors flex items-center gap-2 shadow">
+                    <span>⚡</span> Tag This Cell in Canvas Wizard
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TOAST FEEDBACK NOTIFICATION -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 bg-slate-900 text-white border border-tamu-gold text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2 transition-all duration-300 toast-enter">
+        <span class="text-emerald-400 text-base">✓</span>
+        <span id="toastMessage">Action completed successfully!</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & TAXONOMY DATA DICTIONARIES -->
+    <script>
+        // --- 1. ACCREDITATION DATA DICTIONARIES ---
+        const ABET_OUTCOMES = {
+            SO1: { code: "ABET SO 1", name: "Complex Problem Solving", text: "Identify, formulate, and solve complex engineering/technical problems by applying principles of engineering, science, and mathematics." },
+            SO2: { code: "ABET SO 2", name: "Contextual Solution Design", text: "Apply engineering design to produce solutions that meet specified needs with consideration of public health, safety, and welfare, as well as global, cultural, social, environmental, and economic factors." },
+            SO3: { code: "ABET SO 3", name: "Effective Communication", text: "Communicate effectively with a range of audiences across diverse professional and community settings." },
+            SO4: { code: "ABET SO 4", name: "Ethical & Professional Responsibility", text: "Recognize ethical and professional responsibilities in engineering situations and make informed judgments in global, economic, environmental, and societal contexts." },
+            SO5: { code: "ABET SO 5", name: "Team Leadership & Collaboration", text: "Function effectively on a team whose members together provide leadership, create a collaborative and inclusive environment, establish goals, plan tasks, and meet objectives." },
+            SO6: { code: "ABET SO 6", name: "Data Analysis & Experimentation", text: "Develop and conduct appropriate experimentation, analyze and interpret data, and use engineering judgment to draw conclusions." },
+            SO7: { code: "ABET SO 7", name: "Continuous Knowledge Acquisition", text: "Acquire and apply new knowledge as needed, using appropriate learning strategies." }
+        };
+
+        const CAS_DOMAINS = {
+            CAS1: { code: "CAS Domain 1", name: "Knowledge Acquisition & Application", text: "Knowledge acquisition, construction, integration and practical application." },
+            CAS2: { code: "CAS Domain 2", name: "Cognitive Complexity", text: "Cognitive complexity, critical thinking, reflective judgment, and intellectual growth." },
+            CAS3: { code: "CAS Domain 3", name: "Intrapersonal Development", text: "Intrapersonal development (identity development, ethics, self-efficacy, stewardship)." },
+            CAS4: { code: "CAS Domain 4", name: "Interpersonal Competence", text: "Interpersonal competence, civil dialogue, and meaningful collaborative relationships." },
+            CAS5: { code: "CAS Domain 5", name: "Humanitarianism & Civic Engagement", text: "Humanitarianism, civic engagement, social responsibility, and community partnership." },
+            CAS6: { code: "CAS Domain 6", name: "Practical Competence", text: "Practical competence, leadership execution, effective communication, and operational management." }
+        };
+
+        // --- 2. C4G 21 SUB-COMPETENCIES DATA (BEDROCK LAYER) ---
+        const SUB_COMPETENCIES = [
+            // KNOWLEDGE PILLAR (7)
+            {
+                id: "1.1", pillar: "KNOWLEDGE", title: "Purpose of Institutions",
+                tier1: "Identifies primary functions of democratic institutions by describing their distinct roles in society.",
+                tier1_abet: ["SO7"], tier1_cas: ["CAS1"],
+                tier2: "Analyzes interplay of institutions by comparing how government, business, and community orgs operate with differing constraints.",
+                tier2_abet: ["SO4", "SO7"], tier2_cas: ["CAS1", "CAS2"],
+                tier3: "Evaluates institutional effectiveness by proposing evidence-based strategies for organizational improvement.",
+                tier3_abet: ["SO1", "SO4"], tier3_cas: ["CAS1", "CAS2", "CAS6"]
+            },
+            {
+                id: "1.2", pillar: "KNOWLEDGE", title: "Cultural Competence",
+                tier1: "Recognizes diverse viewpoints by identifying how backgrounds and experiences shape individual opinions.",
+                tier1_abet: ["SO4", "SO5"], tier1_cas: ["CAS3", "CAS4", "CAS5"],
+                tier2: "Analyzes how cultural norms influence communication expectations in diverse professional contexts.",
+                tier2_abet: ["SO3", "SO4"], tier2_cas: ["CAS4", "CAS5"],
+                tier3: "Evaluates varied perspectives on team dynamics to leverage diversity for organizational success.",
+                tier3_abet: ["SO4", "SO5"], tier3_cas: ["CAS4", "CAS5", "CAS6"]
+            },
+            {
+                id: "1.3", pillar: "KNOWLEDGE", title: "Founding Ideas & Principles",
+                tier1: "Identifies key principles from founding documents establishing community mission and values.",
+                tier1_abet: ["SO7"], tier1_cas: ["CAS1"],
+                tier2: "Interprets founding principles in contemporary challenges by articulating historical evolution of legal concepts.",
+                tier2_abet: ["SO4"], tier2_cas: ["CAS1", "CAS2"],
+                tier3: "Critiques application of founding ideals in modern governance regarding alignment with democratic ideals.",
+                tier3_abet: ["SO4"], tier3_cas: ["CAS2", "CAS5"]
+            },
+            {
+                id: "1.4", pillar: "KNOWLEDGE", title: "Rights & Responsibilities",
+                tier1: "Lists fundamental rights, connecting them to corresponding responsibilities of community membership.",
+                tier1_abet: ["SO4"], tier1_cas: ["CAS1", "CAS3", "CAS5"],
+                tier2: "Examines tension between individual rights and public authority by analyzing legal precedents.",
+                tier2_abet: ["SO4"], tier2_cas: ["CAS2", "CAS5"],
+                tier3: "Upholds professional and civic responsibilities by modeling duty extending beyond legal minimums.",
+                tier3_abet: ["SO4"], tier3_cas: ["CAS3", "CAS5", "CAS6"]
+            },
+            {
+                id: "1.5", pillar: "KNOWLEDGE", title: "Current Affairs & Literacy",
+                tier1: "Demonstrates awareness of local context by identifying key public figures and policy roles.",
+                tier1_abet: ["SO7"], tier1_cas: ["CAS1"],
+                tier2: "Contextualizes current events by explaining historical or economic frameworks surrounding a public issue.",
+                tier2_abet: ["SO4", "SO7"], tier2_cas: ["CAS1", "CAS2"],
+                tier3: "Analyzes systemic factors in current events, connecting local issues to broader global contexts.",
+                tier3_abet: ["SO2", "SO4"], tier3_cas: ["CAS2", "CAS5"]
+            },
+            {
+                id: "1.6", pillar: "KNOWLEDGE", title: "How Governance Works",
+                tier1: "Describes decision-making structures of governance and how leadership is held accountable.",
+                tier1_abet: ["SO7"], tier1_cas: ["CAS1"],
+                tier2: "Analyzes governance processes, identifying access points where citizen input influences decisions.",
+                tier2_abet: ["SO4"], tier2_cas: ["CAS2", "CAS5"],
+                tier3: "Analyzes organizational systems to identify correct channels for resolving complex community issues.",
+                tier3_abet: ["SO1", "SO4"], tier3_cas: ["CAS5", "CAS6"]
+            },
+            {
+                id: "1.7", pillar: "KNOWLEDGE", title: "Shared Civic Values",
+                tier1: "Defines core democratic ideals necessary for maintaining a healthy community.",
+                tier1_abet: ["SO4"], tier1_cas: ["CAS1", "CAS3"],
+                tier2: "Maintains professional composure when encountering viewpoints challenging personal beliefs.",
+                tier2_abet: ["SO3", "SO4"], tier2_cas: ["CAS3", "CAS4"],
+                tier3: "Strengthens culture by aligning personal contributions with shared civic values.",
+                tier3_abet: ["SO4", "SO5"], tier3_cas: ["CAS3", "CAS5", "CAS6"]
+            },
+
+            // CHARACTER PILLAR (3)
+            {
+                id: "2.1", pillar: "CHARACTER", title: "Ethical Reasoning",
+                tier1: "Identifies ethical dimensions of a scenario, distinguishing competing values or stakeholder interests.",
+                tier1_abet: ["SO4"], tier1_cas: ["CAS2", "CAS3"],
+                tier2: "Defends a resolution to real-world dilemmas derived from shared ethical principles.",
+                tier2_abet: ["SO2", "SO4"], tier2_cas: ["CAS2", "CAS3", "CAS5"],
+                tier3: "Models ethical leadership despite competing priorities, pressures, and systemic ambiguity.",
+                tier3_abet: ["SO4", "SO5"], tier3_cas: ["CAS3", "CAS6"]
+            },
+            {
+                id: "2.2", pillar: "CHARACTER", title: "Reflective Stewardship",
+                tier1: "Articulates a personal definition of citizenship or professional stewardship.",
+                tier1_abet: ["SO4", "SO7"], tier1_cas: ["CAS3"],
+                tier2: "Examines historical or institutional context to understand how past decisions influence current challenges.",
+                tier2_abet: ["SO4"], tier2_cas: ["CAS2", "CAS3", "CAS5"],
+                tier3: "Integrates civic duty into professional identity by holding self and others accountable.",
+                tier3_abet: ["SO4", "SO5"], tier3_cas: ["CAS3", "CAS6"]
+            },
+            {
+                id: "2.3", pillar: "CHARACTER", title: "Self-Awareness & Bias",
+                tier1: "Identifies personal strengths and values by reflecting on capabilities relative to community needs.",
+                tier1_abet: ["SO7"], tier1_cas: ["CAS3"],
+                tier2: "Demonstrates self-efficacy by volunteering for leadership roles that challenge personal assumptions.",
+                tier2_abet: ["SO4", "SO5"], tier2_cas: ["CAS3", "CAS4"],
+                tier3: "Synthesizes ongoing reflection to align personal agency with professional goals and ethical self-assessment.",
+                tier3_abet: ["SO4", "SO7"], tier3_cas: ["CAS3", "CAS6"]
+            },
+
+            // SKILLS PILLAR (6)
+            {
+                id: "3.1", pillar: "SKILLS", title: "Civil Discourse",
+                tier1: "Engages in respectful discourse by actively listening and framing views constructively.",
+                tier1_abet: ["SO3"], tier1_cas: ["CAS4"],
+                tier2: "Navigates controversial topics by asking clarifying questions to explore differing views.",
+                tier2_abet: ["SO3", "SO4"], tier2_cas: ["CAS2", "CAS4"],
+                tier3: "Facilitates constructive dialogue among differing perspectives, identifying common ground.",
+                tier3_abet: ["SO3", "SO5"], tier3_cas: ["CAS4", "CAS5", "CAS6"]
+            },
+            {
+                id: "3.2", pillar: "SKILLS", title: "Information Literacy",
+                tier1: "Categorizes information by distinguishing objective data, opinion, and promotional content.",
+                tier1_abet: ["SO6", "SO7"], tier1_cas: ["CAS1", "CAS2"],
+                tier2: "Analyzes objectivity and credibility of sources by identifying fallacies and cross-referencing claims.",
+                tier2_abet: ["SO6"], tier2_cas: ["CAS2"],
+                tier3: "Promotes information integrity by synthesizing complex data from conflicting sources.",
+                tier3_abet: ["SO1", "SO6"], tier3_cas: ["CAS2", "CAS6"]
+            },
+            {
+                id: "3.3", pillar: "SKILLS", title: "Facilitation Skills",
+                tier1: "Contributes to team goals by following meeting agendas and participating constructively.",
+                tier1_abet: ["SO5"], tier1_cas: ["CAS4", "CAS6"],
+                tier2: "Guides small group discussions utilizing facilitation techniques to ensure full participation.",
+                tier2_abet: ["SO3", "SO5"], tier2_cas: ["CAS4", "CAS6"],
+                tier3: "Leads complex group processes by guiding stakeholder expectations to foster consensus.",
+                tier3_abet: ["SO3", "SO5"], tier3_cas: ["CAS4", "CAS6"]
+            },
+            {
+                id: "3.4", pillar: "SKILLS", title: "Interpersonal & Inclusivity",
+                tier1: "Establishes professional rapport in interactions by demonstrating courtesy and engagement.",
+                tier1_abet: ["SO3", "SO5"], tier1_cas: ["CAS4"],
+                tier2: "Collaborates in team structures by adjusting personal work styles to support colleague needs.",
+                tier2_abet: ["SO5"], tier2_cas: ["CAS4"],
+                tier3: "Elevates team performance by modeling professional inclusivity and building collaborative networks.",
+                tier3_abet: ["SO3", "SO5"], tier3_cas: ["CAS4", "CAS6"]
+            },
+            {
+                id: "3.5", pillar: "SKILLS", title: "Conflict Resolution",
+                tier1: "Identifies presence of conflict in group settings by neutrally describing specific disagreements.",
+                tier1_abet: ["SO3", "SO5"], tier1_cas: ["CAS4"],
+                tier2: "Resolves minor disputes by applying negotiation strategies that separate people from the problem.",
+                tier2_abet: ["SO3", "SO5"], tier2_cas: ["CAS4", "CAS6"],
+                tier3: "Navigates complex team friction to maintain productivity and consensus despite disagreement.",
+                tier3_abet: ["SO3", "SO5"], tier3_cas: ["CAS4", "CAS6"]
+            },
+            {
+                id: "3.6", pillar: "SKILLS", title: "Teamwork & Cohesion",
+                tier1: "Identifies and aligns personal strengths to foster effective multidisciplinary teams.",
+                tier1_abet: ["SO5"], tier1_cas: ["CAS3", "CAS4"],
+                tier2: "Defines group norms, modes of communication, standards for accountability, and operational roles.",
+                tier2_abet: ["SO5"], tier2_cas: ["CAS4", "CAS6"],
+                tier3: "Cultivates team cohesion by leveraging diverse strengths to foster trust and open communication.",
+                tier3_abet: ["SO5"], tier3_cas: ["CAS4", "CAS6"]
+            },
+
+            // SERVICE PILLAR (5)
+            {
+                id: "4.1", pillar: "SERVICE", title: "Community Context",
+                tier1: "Identifies physical, demographic, and cultural characteristics of a community setting.",
+                tier1_abet: ["SO2", "SO4"], tier1_cas: ["CAS1", "CAS5"],
+                tier2: "Analyzes community dynamics by identifying how different stakeholder interests overlap or conflict.",
+                tier2_abet: ["SO2", "SO4"], tier2_cas: ["CAS2", "CAS5"],
+                tier3: "Synthesizes local context data to inform collaborative community visioning and technical projects.",
+                tier3_abet: ["SO1", "SO2", "SO4"], tier3_cas: ["CAS2", "CAS5", "CAS6"]
+            },
+            {
+                id: "4.2", pillar: "SERVICE", title: "Collaborative Decisions",
+                tier1: "Identifies decision-making hierarchies and protocols within a specific community organization.",
+                tier1_abet: ["SO5"], tier1_cas: ["CAS1", "CAS6"],
+                tier2: "Informs decision processes by contributing data analysis highlighting trade-offs between options.",
+                tier2_abet: ["SO1", "SO2", "SO6"], tier2_cas: ["CAS2", "CAS6"],
+                tier3: "Leads collaborative decision-making by facilitating transparent discussions ensuring stakeholder inclusion.",
+                tier3_abet: ["SO2", "SO3", "SO5"], tier3_cas: ["CAS4", "CAS5", "CAS6"]
+            },
+            {
+                id: "4.3", pillar: "SERVICE", title: "Civic Public Mechanics",
+                tier1: "Articulates importance of civic participation by describing mechanics of public decisions.",
+                tier1_abet: ["SO4"], tier1_cas: ["CAS1", "CAS5"],
+                tier2: "Prepares for civic action by analyzing policy options and stakeholder perspectives.",
+                tier2_abet: ["SO2", "SO4", "SO6"], tier2_cas: ["CAS2", "CAS5"],
+                tier3: "Enhances community capacity by supporting initiatives that increase stakeholder participation.",
+                tier3_abet: ["SO2", "SO4", "SO5"], tier3_cas: ["CAS5", "CAS6"]
+            },
+            {
+                id: "4.4", pillar: "SERVICE", title: "Volunteering & Execution",
+                tier1: "Contributes to organizational missions by performing specific tasks supporting community goals.",
+                tier1_abet: ["SO5"], tier1_cas: ["CAS5", "CAS6"],
+                tier2: "Demonstrates reliability with recurring participation by carrying out high-level project tasks.",
+                tier2_abet: ["SO5"], tier2_cas: ["CAS5", "CAS6"],
+                tier3: "Leads and organizes volunteers and multi-semester initiatives driving long-term community impact.",
+                tier3_abet: ["SO5"], tier3_cas: ["CAS5", "CAS6"]
+            },
+            {
+                id: "4.5", pillar: "SERVICE", title: "Technical Solutions",
+                tier1: "Contributes to brainstorming and ideation processes addressing identified community problems.",
+                tier1_abet: ["SO1", "SO3"], tier1_cas: ["CAS2", "CAS4"],
+                tier2: "Provides constructive feedback on technical projects grounded in practice and partner feedback.",
+                tier2_abet: ["SO2", "SO3"], tier2_cas: ["CAS2", "CAS4", "CAS6"],
+                tier3: "Proposes and implements discipline-based technical solutions based on best practices.",
+                tier3_abet: ["SO1", "SO2"], tier3_cas: ["CAS2", "CAS6"]
+            }
+        ];
+
+        // --- 3. FLOOR MODEL DESCRIPTORS ---
+        const FLOOR_DESCRIPTORS = {
+            KNOWLEDGE: {
+                title: "Knowledge Pillar", subtitle: "Intellectual & Civic Systems",
+                verb1: "Identify", verb2: "Analyze", verb3: "Synthesize",
+                TIER1: "Identify fundamental civic, institutional, or historical frameworks relevant to the discipline.",
+                TIER2: "Analyze how systemic policies, legal structures, or cultural contexts impact real-world public issues.",
+                TIER3: "Synthesize multidisciplinary data to evaluate systemic solutions or institutional effectiveness."
+            },
+            CHARACTER: {
+                title: "Character Pillar", subtitle: "Ethics & Personal Stewardship",
+                verb1: "Recognize", verb2: "Defend", verb3: "Model",
+                TIER1: "Recognize ethical dimensions, personal values, and civic responsibilities relevant to the project.",
+                TIER2: "Defend ethical decisions when balancing competing stakeholder interests and societal trade-offs.",
+                TIER3: "Model ethical leadership, holding self and others accountable in complex, ambiguous environments."
+            },
+            SKILLS: {
+                title: "Skills Pillar", subtitle: "Dialogue, Collaboration & Mediation",
+                verb1: "Practice", verb2: "Facilitate", verb3: "Lead / Mediate",
+                TIER1: "Practice active listening, civil discourse, and respectful engagement in team settings.",
+                TIER2: "Facilitate inclusive team communication, navigating minor conflicts and diverse viewpoints.",
+                TIER3: "Lead and mediate entrenched group friction to build consensus and drive shared decision-making."
+            },
+            SERVICE: {
+                title: "Service Pillar", subtitle: "Reciprocal Action & Community Impact",
+                verb1: "Participate", verb2: "Execute", verb3: "Co-Design",
+                TIER1: "Participate reliably in foundational service or volunteer tasks with community awareness.",
+                TIER2: "Execute applied, recurring projects that directly address community-defined priorities.",
+                TIER3: "Co-design sustainable, long-term initiatives alongside community partners sharing decision authority."
+            }
+        };
+
+        // --- 4. STATE MANAGEMENT & RENDER LOGIC ---
+        let selectedCellForDrawer = null;
+        let activeCrosswalkFilter = null;
+        let currentRoleMode = "FACULTY";
+
+        // Initialize App
+        document.addEventListener("DOMContentLoaded", () => {
+            renderFloorGrid();
+            renderBedrockCards();
+            renderCrosswalkButtons();
+            renderCrosswalkGrid();
+            updateTagFormSubOptions();
+            generateCanvasPayload();
+        });
+
+        // Tab Switcher
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-tamu-maroon', 'bg-slate-100', 'border-b-2', 'border-tamu-maroon', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active', 'text-tamu-maroon', 'bg-slate-100', 'border-b-2', 'border-tamu-maroon', 'shadow-sm');
+            }
+
+            ['floor', 'bedrock', 'crosswalk', 'canvas'].forEach(view => {
+                const el = document.getElementById(`view-${view}`);
+                if (el) el.classList.add('hidden');
+            });
+            const targetView = document.getElementById(`view-${tabName}`);
+            if (targetView) targetView.classList.remove('hidden');
+        }
+
+        // Role Mode Handler
+        function handleRoleViewChange() {
+            currentRoleMode = document.getElementById('roleViewSelect').value;
+            const bannerTitle = document.getElementById('roleBannerTitle');
+            const bannerDesc = document.getElementById('roleBannerDesc');
+
+            if (currentRoleMode === 'FACULTY') {
+                bannerTitle.innerText = "Faculty Floor View (Low Friction)";
+                bannerDesc.innerText = "Showing the simplified 12-cell macro matrix. Focus on syllabus tagging without cognitive spreadsheet overload.";
+                switchTab('floor');
+            } else if (currentRoleMode === 'ACCREDITATION') {
+                bannerTitle.innerText = "ABET & CAS Assessment Lead View (Compliance)";
+                bannerDesc.innerText = "Full compliance mapping active. Use the Accreditation Filter tab to highlight ABET Student Outcomes (SO 1-7) or CAS Domains (1-6).";
+                switchTab('crosswalk');
+            } else if (currentRoleMode === 'STUDENT') {
+                bannerTitle.innerText = "Student Learner View";
+                bannerDesc.innerText = "Focus on action verbs and personal reflections. Pick a pillar to see how your course assignments translate to real-world career competencies.";
+                switchTab('floor');
+            } else if (currentRoleMode === 'ALL') {
+                bannerTitle.innerText = "Unfiltered 63-Cell Bedrock Layer";
+                bannerDesc.innerText = "Full reference dictionary view displaying all 21 sub-competencies across 3 progression tiers simultaneously.";
+                switchTab('bedrock');
+            }
+        }
+
+        // --- RENDER FLOOR GRID (VIEW 1) ---
+        function renderFloorGrid() {
+            const container = document.getElementById('floorMatrixGrid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const pillars = ['KNOWLEDGE', 'CHARACTER', 'SKILLS', 'SERVICE'];
+            const tiers = ['TIER1', 'TIER2', 'TIER3'];
+
+            pillars.forEach(pillarKey => {
+                const pillarMeta = FLOOR_DESCRIPTORS[pillarKey];
+                
+                // Pillar Header Box (Column 1)
+                const pillarLabel = document.createElement('div');
+                pillarLabel.className = "bg-slate-900 text-white p-4 rounded-xl flex flex-col justify-center border-l-4 border-tamu-maroon shadow-sm";
+                pillarLabel.innerHTML = `
+                    <span class="text-[10px] text-amber-400 font-extrabold tracking-widest uppercase">PILLAR</span>
+                    <h4 class="text-base font-black text-white leading-tight">${pillarMeta.title}</h4>
+                    <p class="text-xs text-slate-300 mt-1">${pillarMeta.subtitle}</p>
+                `;
+                container.appendChild(pillarLabel);
+
+                // 3 Tier Macro Cells
+                tiers.forEach((tierKey, idx) => {
+                    const subList = SUB_COMPETENCIES.filter(s => s.pillar === pillarKey);
+                    const tierNum = idx + 1;
+                    const actionVerb = pillarMeta[`verb${tierNum}`];
+
+                    // Calculate inherited ABET & CAS sets
+                    let abetSet = new Set();
+                    let casSet = new Set();
+                    subList.forEach(s => {
+                        s[`tier${tierNum}_abet`].forEach(a => abetSet.add(a));
+                        s[`tier${tierNum}_cas`].forEach(c => casSet.add(c));
+                    });
+
+                    // Match status with active crosswalk filter
+                    let isFiltered = false;
+                    let isDimmed = false;
+                    if (activeCrosswalkFilter) {
+                        const { codeKey, type } = activeCrosswalkFilter;
+                        const matchCount = subList.filter(s => s[`tier${tierNum}_${type.toLowerCase()}`].includes(codeKey)).length;
+                        if (matchCount > 0) {
+                            isFiltered = true;
+                        } else {
+                            isDimmed = true;
+                        }
+                    }
+
+                    const cellBox = document.createElement('div');
+                    cellBox.className = `p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between group bg-white shadow-sm hover:shadow-md hover:border-tamu-maroon ${
+                        isFiltered ? 'border-2 border-tamu-gold gold-glow bg-amber-50/50 highlight-cell' : 'border-slate-200'
+                    } ${isDimmed ? 'opacity-30 grayscale' : ''}`;
+
+                    cellBox.onclick = () => openDrawer(pillarKey, tierKey);
+
+                    cellBox.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+                                    isFiltered ? 'bg-tamu-maroon text-white' : 'bg-slate-100 text-slate-700 group-hover:bg-tamu-maroon group-hover:text-white'
+                                } transition-colors">
+                                    ${actionVerb}
+                                </span>
+                                <span class="text-[11px] font-bold text-slate-400 group-hover:text-tamu-maroon">
+                                    ${subList.length} Themes
+                                </span>
+                            </div>
+                            <p class="text-xs font-semibold text-slate-800 leading-snug">
+                                "${pillarMeta[tierKey]}"
+                            </p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between text-[10px]">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="bg-amber-100 text-tamu-dark font-black px-1.5 py-0.5 rounded">${abetSet.size} ABET</span>
+                                <span class="bg-slate-100 text-slate-700 font-black px-1.5 py-0.5 rounded">${casSet.size} CAS</span>
+                            </div>
+                            <span class="text-tamu-maroon font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+                        </div>
+                    `;
+                    container.appendChild(cellBox);
+                });
+            });
+        }
+
+        // --- DRAWER MODAL LOGIC ---
+        function openDrawer(pillarKey, tierKey) {
+            selectedCellForDrawer = { pillarKey, tierKey };
+            const pillarMeta = FLOOR_DESCRIPTORS[pillarKey];
+            const tierNum = tierKey === 'TIER1' ? 1 : tierKey === 'TIER2' ? 2 : 3;
+            const subList = SUB_COMPETENCIES.filter(s => s.pillar === pillarKey);
+
+            document.getElementById('drawerPillarBadge').innerText = `${pillarKey} PILLAR`;
+            document.getElementById('drawerTierBadge').innerText = `TIER ${tierNum}: ${tierKey === 'TIER1' ? 'AWARENESS' : tierKey === 'TIER2' ? 'COMPETENCE' : 'LEADERSHIP'}`;
+            document.getElementById('drawerTitle').innerText = `${pillarMeta.title} (${tierKey === 'TIER1' ? 'Tier 1' : tierKey === 'TIER2' ? 'Tier 2' : 'Tier 3'})`;
+            document.getElementById('drawerMacroDescriptor').innerText = `"${pillarMeta[tierKey]}"`;
+            document.getElementById('drawerSubCount').innerText = subList.length;
+
+            const subContainer = document.getElementById('drawerSubList');
+            subContainer.innerHTML = '';
+
+            subList.forEach(sub => {
+                const desc = sub[`tier${tierNum}`];
+                const abetCodes = sub[`tier${tierNum}_abet`];
+                const casCodes = sub[`tier${tierNum}_cas`];
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-tamu-maroon">${sub.id} ${sub.title}</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed font-medium">${desc}</p>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        ${abetCodes.map(code => `<span class="bg-tamu-maroon text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm" title="${ABET_OUTCOMES[code].text}">${ABET_OUTCOMES[code].code}: ${ABET_OUTCOMES[code].name}</span>`).join('')}
+                        ${casCodes.map(code => `<span class="bg-slate-700 text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm" title="${CAS_DOMAINS[code].text}">${CAS_DOMAINS[code].code}: ${CAS_DOMAINS[code].name}</span>`).join('')}
+                    </div>
+                `;
+                subContainer.appendChild(card);
+            });
+
+            document.getElementById('cellDrawerModal').classList.remove('hidden');
+        }
+
+        function closeDrawer() {
+            document.getElementById('cellDrawerModal').classList.add('hidden');
+        }
+
+        function useCellInCanvasTagger() {
+            if (!selectedCellForDrawer) return;
+            closeDrawer();
+            switchTab('canvas');
+            document.getElementById('tagPillarSelect').value = selectedCellForDrawer.pillarKey;
+            document.getElementById('tagTierSelect').value = selectedCellForDrawer.tierKey;
+            updateTagFormSubOptions();
+            generateCanvasPayload();
+            showToast("Populated Canvas Wizard from Cell selection!");
+        }
+
+        // --- RENDER BEDROCK CARDS (VIEW 2) ---
+        function renderBedrockCards() {
+            const container = document.getElementById('bedrockCardsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const selectedPillar = document.getElementById('bedrockPillarFilter')?.value || 'ALL';
+            const subList = SUB_COMPETENCIES.filter(s => selectedPillar === 'ALL' || s.pillar === selectedPillar);
+
+            subList.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:border-tamu-maroon transition-all";
+                card.innerHTML = `
+                    <div class="p-3.5 bg-slate-900 text-white border-b border-slate-800 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-black text-amber-400 uppercase tracking-widest">${sub.pillar} PILLAR</span>
+                            <h4 class="text-sm font-bold text-white">${sub.id} ${sub.title}</h4>
+                        </div>
+                        <span class="text-xs bg-tamu-maroon text-white font-black px-2 py-0.5 rounded">C4G</span>
+                    </div>
+
+                    <div class="p-4 space-y-3 flex-1 text-xs">
+                        <div class="border-b border-slate-100 pb-2.5">
+                            <span class="font-bold text-amber-800 block mb-0.5">Tier 1 (Emerging Awareness):</span>
+                            <p class="text-slate-700 leading-snug">${sub.tier1}</p>
+                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                ${sub.tier1_abet.map(c => `<span class="bg-tamu-maroon/10 text-tamu-maroon text-[9px] font-bold px-1.5 py-0.5 rounded">${ABET_OUTCOMES[c].code}</span>`).join('')}
+                                ${sub.tier1_cas.map(c => `<span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-1.5 py-0.5 rounded">${CAS_DOMAINS[c].code}</span>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="border-b border-slate-100 pb-2.5">
+                            <span class="font-bold text-amber-800 block mb-0.5">Tier 2 (Developing Competence):</span>
+                            <p class="text-slate-700 leading-snug">${sub.tier2}</p>
+                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                ${sub.tier2_abet.map(c => `<span class="bg-tamu-maroon/10 text-tamu-maroon text-[9px] font-bold px-1.5 py-0.5 rounded">${ABET_OUTCOMES[c].code}</span>`).join('')}
+                                ${sub.tier2_cas.map(c => `<span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-1.5 py-0.5 rounded">${CAS_DOMAINS[c].code}</span>`).join('')}
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="font-bold text-amber-800 block mb-0.5">Tier 3 (Mastery & Leadership):</span>
+                            <p class="text-slate-700 leading-snug">${sub.tier3}</p>
+                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                ${sub.tier3_abet.map(c => `<span class="bg-tamu-maroon/10 text-tamu-maroon text-[9px] font-bold px-1.5 py-0.5 rounded">${ABET_OUTCOMES[c].code}</span>`).join('')}
+                                ${sub.tier3_cas.map(c => `<span class="bg-slate-100 text-slate-700 text-[9px] font-bold px-1.5 py-0.5 rounded">${CAS_DOMAINS[c].code}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterBedrockView() {
+            renderBedrockCards();
+        }
+
+        // --- RENDER ACCREDITATION FILTER (VIEW 3) ---
+        function renderCrosswalkButtons() {
+            const abetContainer = document.getElementById('abetFilterButtons');
+            const casContainer = document.getElementById('casFilterButtons');
+            if (!abetContainer || !casContainer) return;
+
+            abetContainer.innerHTML = Object.keys(ABET_OUTCOMES).map(key => `
+                <button onclick="setCrosswalkFilter('${key}', 'ABET')" id="btnFilter-${key}" 
+                        class="text-xs font-bold px-3 py-1.5 rounded-lg border border-tamu-maroon text-tamu-maroon hover:bg-tamu-maroon hover:text-white transition-all shadow-sm">
+                    ${ABET_OUTCOMES[key].code}: ${ABET_OUTCOMES[key].name}
+                </button>
+            `).join('');
+
+            casContainer.innerHTML = Object.keys(CAS_DOMAINS).map(key => `
+                <button onclick="setCrosswalkFilter('${key}', 'CAS')" id="btnFilter-${key}" 
+                        class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-600 text-slate-700 hover:bg-slate-800 hover:text-white transition-all shadow-sm">
+                    ${CAS_DOMAINS[key].code}: ${CAS_DOMAINS[key].name}
+                </button>
+            `).join('');
+        }
+
+        function setCrosswalkFilter(codeKey, type) {
+            activeCrosswalkFilter = { codeKey, type };
+            
+            document.querySelectorAll('#abetFilterButtons button, #casFilterButtons button').forEach(btn => {
+                btn.classList.remove('bg-tamu-maroon', 'bg-slate-800', 'text-white');
+            });
+            const activeBtn = document.getElementById(`btnFilter-${codeKey}`);
+            if (activeBtn) {
+                activeBtn.classList.add(type === 'ABET' ? 'bg-tamu-maroon' : 'bg-slate-800', 'text-white');
+            }
+
+            document.getElementById('btnClearCrosswalk').classList.remove('hidden');
+            renderCrosswalkGrid();
+            renderFloorGrid(); // Sync floor model highlight
+        }
+
+        function clearCrosswalkFilter() {
+            activeCrosswalkFilter = null;
+            document.querySelectorAll('#abetFilterButtons button, #casFilterButtons button').forEach(btn => {
+                btn.classList.remove('bg-tamu-maroon', 'bg-slate-800', 'text-white');
+            });
+            document.getElementById('btnClearCrosswalk').classList.add('hidden');
+            document.getElementById('crosswalkSummary').innerHTML = `<span class="text-xs sm:text-sm font-medium text-slate-700">Select an accreditation outcome tag above to generate coverage report.</span>`;
+            renderCrosswalkGrid();
+            renderFloorGrid();
+        }
+
+        function renderCrosswalkGrid() {
+            const container = document.getElementById('crosswalkGridContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!activeCrosswalkFilter) {
+                container.innerHTML = `
+                    <div class="col-span-3 text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <span class="text-2xl block mb-1">🎯</span>
+                        <p class="text-xs font-bold">Select any ABET Student Outcome (SO 1-7) or CAS Domain (1-6) above to see matching themes.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const { codeKey, type } = activeCrosswalkFilter;
+            const fullMeta = type === 'ABET' ? ABET_OUTCOMES[codeKey] : CAS_DOMAINS[codeKey];
+
+            let totalMatches = 0;
+
+            SUB_COMPETENCIES.forEach(sub => {
+                const t1Match = sub[type === 'ABET' ? 'tier1_abet' : 'tier1_cas'].includes(codeKey);
+                const t2Match = sub[type === 'ABET' ? 'tier2_abet' : 'tier2_cas'].includes(codeKey);
+                const t3Match = sub[type === 'ABET' ? 'tier3_abet' : 'tier3_cas'].includes(codeKey);
+
+                if (t1Match || t2Match || t3Match) {
+                    totalMatches++;
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-xl border-2 border-amber-400 shadow-sm space-y-2.5 gold-glow";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-tamu-maroon text-white">${sub.pillar}</span>
+                            <span class="text-xs font-bold text-tamu-maroon">${sub.id} ${sub.title}</span>
+                        </div>
+                        <div class="space-y-1.5 text-xs pt-1">
+                            ${t1Match ? `<div class="bg-amber-50 p-2 rounded-lg border-l-2 border-amber-500"><strong class="text-amber-900 block text-[10px]">Tier 1 (Awareness):</strong> <span class="text-slate-800">${sub.tier1}</span></div>` : ''}
+                            ${t2Match ? `<div class="bg-amber-50 p-2 rounded-lg border-l-2 border-amber-500"><strong class="text-amber-900 block text-[10px]">Tier 2 (Competence):</strong> <span class="text-slate-800">${sub.tier2}</span></div>` : ''}
+                            ${t3Match ? `<div class="bg-amber-50 p-2 rounded-lg border-l-2 border-amber-500"><strong class="text-amber-900 block text-[10px]">Tier 3 (Leadership):</strong> <span class="text-slate-800">${sub.tier3}</span></div>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            });
+
+            document.getElementById('crosswalkSummary').innerHTML = `
+                <div>
+                    <span class="text-xs font-black uppercase tracking-wider text-tamu-maroon block">Active Accreditation Standard: ${fullMeta.code} (${fullMeta.name})</span>
+                    <p class="text-xs text-slate-600 mt-0.5">${fullMeta.text}</p>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="text-2xl font-black text-tamu-maroon">${totalMatches}</span>
+                    <span class="text-[10px] font-bold text-slate-500 block uppercase">Matching Sub-Themes</span>
+                </div>
+            `;
+        }
+
+        // --- 5. CANVAS TAG GENERATOR LOGIC (VIEW 4) ---
+        function updateTagFormSubOptions() {
+            const pillar = document.getElementById('tagPillarSelect').value;
+            const container = document.getElementById('drilldownChecklist');
+            if (!container) return;
+
+            const subs = SUB_COMPETENCIES.filter(s => s.pillar === pillar);
+
+            container.innerHTML = subs.map(s => `
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer hover:text-tamu-maroon font-medium">
+                    <input type="checkbox" value="${s.id}" class="sub-checkbox rounded text-tamu-maroon focus:ring-tamu-maroon" onchange="generateCanvasPayload()">
+                    <span>${s.id} ${s.title}</span>
+                </label>
+            `).join('');
+            generateCanvasPayload();
+        }
+
+        function generateCanvasPayload() {
+            const courseTitle = document.getElementById('tagCourseTitle').value || 'ENGR 482 / Aggie Replant Lead';
+            const pillar = document.getElementById('tagPillarSelect').value;
+            const tier = document.getElementById('tagTierSelect').value;
+            const pillarMeta = FLOOR_DESCRIPTORS[pillar];
+            const tierNum = tier === 'TIER1' ? 1 : tier === 'TIER2' ? 2 : 3;
+
+            const checkedBoxes = Array.from(document.querySelectorAll('.sub-checkbox:checked')).map(cb => cb.value);
+            const activeSubs = checkedBoxes.length > 0 
+                ? SUB_COMPETENCIES.filter(s => checkedBoxes.includes(s.id))
+                : SUB_COMPETENCIES.filter(s => s.pillar === pillar);
+
+            let abetCodes = new Set();
+            let casCodes = new Set();
+            activeSubs.forEach(s => {
+                s[`tier${tierNum}_abet`].forEach(a => abetCodes.add(a));
+                s[`tier${tierNum}_cas`].forEach(c => casCodes.add(c));
+            });
+
+            document.getElementById('previewBadgeTier').innerText = `TIER ${tierNum}: ${tier === 'TIER1' ? 'AWARENESS' : tier === 'TIER2' ? 'COMPETENCE' : 'LEADERSHIP'}`;
+
+            // Visual Canvas Component
+            const visualContainer = document.getElementById('canvasVisualPreview');
+            visualContainer.innerHTML = `
+                <div class="space-y-3">
+                    <h4 class="text-sm font-black text-tamu-maroon">${courseTitle}</h4>
+                    <p class="text-xs font-bold text-slate-800">C4G Pillar Focus: ${pillarMeta.title} (${pillarMeta.subtitle})</p>
+                    <p class="text-xs text-slate-700 italic bg-amber-50/70 p-3 rounded-lg border border-amber-200/60 leading-relaxed font-medium">
+                        "${pillarMeta[tier]}"
+                    </p>
+                    <div class="pt-1 flex flex-wrap gap-1.5">
+                        ${Array.from(abetCodes).map(code => `<span class="bg-tamu-maroon text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">${ABET_OUTCOMES[code].code}: ${ABET_OUTCOMES[code].name}</span>`).join('')}
+                        ${Array.from(casCodes).map(code => `<span class="bg-slate-700 text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">${CAS_DOMAINS[code].code}: ${CAS_DOMAINS[code].name}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Raw Canvas HTML Snippet
+            const rawSnippet = `<div style="border: 2px solid #500000; border-radius: 8px; padding: 16px; background-color: #ffffff; font-family: 'Inter', sans-serif;">
+  <div style="background-color: #500000; color: #ffffff; padding: 6px 12px; font-weight: bold; font-size: 12px; border-radius: 4px 4px 0 0;">
+    TEXAS A&M C4G CITIZENSHIP FRAMEWORK
+  </div>
+  <div style="padding: 12px 0;">
+    <h4 style="margin: 0 0 8px 0; color: #500000; font-size: 14px;">${courseTitle}</h4>
+    <p style="font-size: 12px; color: #334155; margin: 0 0 8px 0; font-style: italic;">
+      "${pillarMeta[tier]}"
+    </p>
+  </div>
+</div>`;
+            document.getElementById('canvasSnippetCode').innerText = rawSnippet;
+
+            // Compliance JSON Payload
+            const jsonPayload = {
+                institution: "Texas A&M University",
+                program: "Citizenship & Service (C4G)",
+                course_activity: courseTitle,
+                matrix_coordinate: {
+                    pillar: pillar,
+                    tier: `TIER_${tierNum}`,
+                    macro_descriptor: pillarMeta[tier]
+                },
+                selected_sub_competencies: activeSubs.map(s => ({ id: s.id, title: s.title })),
+                accreditation_inheritance: {
+                    abet_student_outcomes: Array.from(abetCodes).map(c => ({ code: ABET_OUTCOMES[c].code, title: ABET_OUTCOMES[c].name })),
+                    cas_domains: Array.from(casCodes).map(c => ({ code: CAS_DOMAINS[c].code, title: CAS_DOMAINS[c].name }))
+                },
+                timestamp: new Date().toISOString()
+            };
+            document.getElementById('jsonPayloadCode').innerText = JSON.stringify(jsonPayload, null, 2);
+        }
+
+        // --- UTILITY & FEEDBACK FUNCTIONS ---
+        function toggleElement(id) {
+            document.getElementById(id)?.classList.toggle('hidden');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            if (!toast || !msgEl) return;
+
+            msgEl.innerText = message;
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-show');
+
+            setTimeout(() => {
+                toast.classList.remove('toast-show');
+                toast.classList.add('toast-enter');
+            }, 2500);
+        }
+
+        function copyToClipboard(elementId, btnId) {
+            const text = document.getElementById(elementId).innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast("Copied content to clipboard!");
+            } catch (err) {
+                console.error('Copy failed', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('globalSearch').value.toLowerCase().trim();
+            const btnClear = document.getElementById('btnClearSearch');
+
+            if (query.length > 0) {
+                btnClear.classList.remove('hidden');
+                switchTab('bedrock');
+                const cards = document.querySelectorAll('#bedrockCardsContainer > div');
+                cards.forEach(card => {
+                    const text = card.innerText.toLowerCase();
+                    card.style.display = text.includes(query) ? 'flex' : 'none';
+                });
+            } else {
+                btnClear.classList.add('hidden');
+                renderBedrockCards();
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('globalSearch').value = '';
+            handleSearch();
+        }
+    </script>
+</body>
+</html>
